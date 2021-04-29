@@ -3,6 +3,7 @@
 M5Stack touchscreen to remotly switch antennas polarization
 
 ![](https://raw.githubusercontent.com/fg8oj/RemotePolarisationSwitch/main/wimo-polarization-switch.jpg)
+![](https://raw.githubusercontent.com/fg8oj/RemotePolarisationSwitch/main/M5Stack_relaybox.jpg)
 
 Using :
 - 2 x Wimo Remote Polarisation switch : https://int.wimo.com/en/catalogsearch/result/?q=Remote+Polarisation+switch (172.27€ to 205.88€)
