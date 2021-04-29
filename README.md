@@ -1,6 +1,6 @@
 # Remote Antenna Polarisation Switch
 
-M5Stack touchscreen to remotly switch antennas polarization for XQuad or Crossed Yagi antennas.
+M5Stack touchscreen to remotly switch polarizations for XQuad or Crossed Yagi antennas.
 
 ![](https://raw.githubusercontent.com/fg8oj/RemotePolarisationSwitch/main/wimo-polarization-switch.jpg)
 ![](https://raw.githubusercontent.com/fg8oj/RemotePolarisationSwitch/main/M5Stack_relaybox.jpg)
