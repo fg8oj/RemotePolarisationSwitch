@@ -1,4 +1,4 @@
-# Remote Polarisation Switch
+# Remote Antenna Polarisation Switch
 
 M5Stack touchscreen to remotly switch antennas polarization
 
