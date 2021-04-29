@@ -2,6 +2,8 @@
 
 M5Stack touchscreen to remotly switch antennas polarization
 
+![](https://github.com/fg8oj/RemotePolarisationSwitch/blob/main/wimo-polarization-switch.jpg | width=200)
+
 Using :
 - 2 x Wimo Remote Polarisation switch : https://int.wimo.com/en/catalogsearch/result/?q=Remote+Polarisation+switch (172.27€ to 205.88€)
 - M5Stack Core2 ESP32 IoT Development Kit : https://shop.m5stack.com/products/m5stack-core2-esp32-iot-development-kit ($46.90)
