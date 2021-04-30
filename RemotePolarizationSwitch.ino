@@ -15,7 +15,7 @@ int tcount = 0;
 RTC_TimeTypeDef RTC_TimeStruct;
 RTC_DateTypeDef RTC_DateStruct;
 uint32_t secs = 0;
-int screensaver=5;
+int screensaver=60;
 int timer=screensaver;
 uint16_t prevTime = millis();
 const IPAddress apIP(192, 168, 4, 1);
