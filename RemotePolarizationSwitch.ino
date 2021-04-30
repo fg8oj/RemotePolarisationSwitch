@@ -7,14 +7,15 @@
 #include <Preferences.h>
 #include "time.h"
 #include "Free_Fonts.h"
+#include "index.html.h"
 
 char* ntpServer =  "fr.pool.ntp.org";
 int timeZone = 0;
 int tcount = 0;
 RTC_TimeTypeDef RTC_TimeStruct;
 RTC_DateTypeDef RTC_DateStruct;
-
-int screensaver=60;
+uint32_t secs = 0;
+int screensaver=5;
 int timer=screensaver;
 uint16_t prevTime = millis();
 const IPAddress apIP(192, 168, 4, 1);
@@ -46,7 +47,8 @@ int C7posy=191;
 char strC[]={"CIRC"};
 char strV[]={"VERT"};
 char strH[]={"HORI"};
-
+String Str2m="HORI";
+String Str70cm="HORI";
 void DingDong() {
   
 }
@@ -54,6 +56,7 @@ void DingDong() {
 void setup(){
   M5.begin();
   DingDong();
+  Serial.begin(9600);
   M5.Lcd.fillScreen(TFT_BLACK);
   M5.Lcd.setCursor(0, 0, 2);
   M5.Lcd.setBrightness(10);
@@ -65,7 +68,7 @@ void setup(){
   M5.Lcd.println("             Antenna Switch");
   M5.Lcd.setCursor(58 ,120,1);
   M5.Lcd.setFreeFont(FSB24);
-  M5.Lcd.println("F G 8 O J");
+  M5.Lcd.print("F G 8 O J");
   M5.Lcd.setFreeFont(FSB9);
   
   preferences.begin("wifi-config");
@@ -96,8 +99,8 @@ void initscreen() {
   M5.Lcd.setTextColor(TFT_BLACK,TFT_YELLOW);
   M5.Lcd.setFreeFont(FSB18);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.setCursor(65 ,80,1);
-  M5.Lcd.println("2m");
+  M5.Lcd.setCursor(60 ,80,1);
+  M5.Lcd.println("2 m");
   M5.Lcd.setCursor(210 ,80,1);
   M5.Lcd.println("70cm");
   
@@ -142,20 +145,28 @@ void doTime() {
     M5.Lcd.printf("%02d/%02d/%04d\n",RTC_DateStruct.Date , RTC_DateStruct.Month, RTC_DateStruct.Year);
     M5.Lcd.setCursor(182, 35);
     M5.Lcd.printf("%02d:%02d:%02d\n", RTC_TimeStruct.Hours, RTC_TimeStruct.Minutes, RTC_TimeStruct.Seconds);
-    
   }
 }
 
 
 //delays stopping usualy everything using this workarround
 bool timeToDo(int tbase) {
-  tcount++;
+  /*tcount++;
   if (tcount == tbase) {
     tcount = 0;
     return true;    
   } else {
     return false;
-  }  
+  } 
+  */
+    if (millis() / tbase > secs) {
+    secs = millis() / tbase;
+    timer--;
+    return true;   
+} else {
+    return false;
+  } 
+
 }
 
 void timeSync() {
@@ -184,41 +195,39 @@ void timeSync() {
 
 void loop() {
   M5.update();
-  if((millis() - prevTime >= 1000) && (timer >= 0))
-  {
-    prevTime = millis();
-    timer--;
-  }
+  webServer.handleClient();
+  Event& e = M5.Buttons.event;
+  doTime();
   if(timer <= 0) {
-    int timer = screensaver;
     M5.Lcd.writecommand(ILI9341_DISPOFF);
   }
   if (settingMode) {
   }
-  webServer.handleClient();
-  Event& e = M5.Buttons.event;
-  if (e & (E_TOUCH | E_MOVE) && timer < 0) {
+  if (e & (E_TOUCH | E_MOVE)&& (timer <= 0)) {
     M5.Axp.SetLDOEnable(3,true);
     delay(100);
     M5.Axp.SetLDOEnable(3,false); 
     M5.Lcd.writecommand(ILI9341_DISPON);
     timer=screensaver;
-    prevTime = millis();
-    delay(100);
-    //return;
+    //delay(100);
+    return;
   }
+  
   if (e & (E_TOUCH | E_MOVE) && timer > 0) {
+ // if (e & (E_TOUCH | E_MOVE) ) {
+  
     timer=screensaver;
     M5.Axp.SetLDOEnable(3,true);
     delay(100);
     M5.Axp.SetLDOEnable(3,false); 
+    
     if (e.to.x>H2posx && e.to.x<H2posx+155 && e.to.y>H2posy && e.to.y<H2posy+56) {
       activate_button(H2posx,H2posy,strH);
       deactivate_button(V2posx,V2posy,strV);
       deactivate_button(C2posx,C2posy,strC);
       relay.turn_on_channel(1);
       relay.turn_off_channel(2);
-      
+      Str2m="HORI";  
     }
     if (e.to.x>V2posx && e.to.x<V2posx+155 && e.to.y>V2posy && e.to.y<V2posy+56) {
       deactivate_button(H2posx,H2posy,strH);
@@ -227,6 +236,7 @@ void loop() {
       relay.turn_off_channel(1);
       relay.turn_off_channel(2);
       DingDong();
+      Str2m="VERT"; 
     }
     if (e.to.x>C2posx && e.to.x<C2posx+155 && e.to.y>C2posy && e.to.y<C2posy+56) {
       deactivate_button(H2posx,H2posy,strH);
@@ -235,6 +245,7 @@ void loop() {
       relay.turn_off_channel(1);
       relay.turn_on_channel(2);
       DingDong();
+      Str2m="CIRC"; 
     }
     if (e.to.x>H7posx && e.to.x<H7posx+155 && e.to.y>H7posy && e.to.y<H7posy+56) {
       activate_button(H7posx,H7posy,strH);
@@ -243,6 +254,7 @@ void loop() {
       relay.turn_on_channel(3);
       relay.turn_off_channel(4);
       DingDong();
+      Str70cm="HORI";
     }
     if (e.to.x>V7posx && e.to.x<V7posx+155 && e.to.y>V7posy && e.to.y<V7posy+56) {
       deactivate_button(H7posx,H7posy,strH);
@@ -251,6 +263,7 @@ void loop() {
       relay.turn_off_channel(3);
       relay.turn_off_channel(4);
       DingDong();
+      Str70cm="VERT";
     }
     if (e.to.x>C7posx && e.to.x<C7posx+155 && e.to.y>C7posy && e.to.y<C7posy+56) {
       deactivate_button(H7posx,H7posy,strH);
@@ -259,14 +272,16 @@ void loop() {
       relay.turn_off_channel(3);
       relay.turn_on_channel(4);
       DingDong();
+      Str70cm="CIRC";
     }
   }
-  doTime();
+  
 }
 
 boolean restoreConfig() {
   wifi_ssid = preferences.getString("WIFI_SSID");
   wifi_password = preferences.getString("WIFI_PASSWD");
+  M5.Lcd.println("");
   M5.Lcd.println("========== WIFI ==========");
   M5.Lcd.print("SSID: ");
   M5.Lcd.println(wifi_ssid);
@@ -336,9 +351,89 @@ void startWebServer() {
     });
   }
   else {
+     webServer.on("/json", []() {
+      if (webServer.hasArg("band") && webServer.hasArg("polar")) {
+        String band=webServer.arg("band");
+        String polar=webServer.arg("polar");
+        M5.Lcd.writecommand(ILI9341_DISPON);
+        timer=screensaver;
+        if (band=="2m") { 
+          if (polar=="HORI") {
+            if (Str2m=="HORI") return;
+            activate_button(H2posx,H2posy,strH);
+            deactivate_button(V2posx,V2posy,strV);
+            deactivate_button(C2posx,C2posy,strC);
+            relay.turn_on_channel(1);
+            relay.turn_off_channel(2);
+          }
+          if (polar=="VERT") {
+            if (Str2m=="VERT") return;
+            deactivate_button(H2posx,H2posy,strH);
+            activate_button(V2posx,V2posy,strV);
+            deactivate_button(C2posx,C2posy,strC);
+            relay.turn_off_channel(1);
+            relay.turn_off_channel(2);
+          }
+          if (polar=="CIRC") {
+            if (Str2m=="CIRC") return;
+            deactivate_button(H2posx,H2posy,strH);
+            deactivate_button(V2posx,V2posy,strV);
+            activate_button(C2posx,C2posy,strC);
+            relay.turn_off_channel(1);
+            relay.turn_on_channel(2);
+          }
+          Str2m=polar;
+        }
+        if (band=="70cm") {
+          if (polar=="HORI") {
+            if (Str70cm=="HORI") return;
+            activate_button(H7posx,H7posy,strH);
+            deactivate_button(V7posx,V7posy,strV);
+            deactivate_button(C7posx,C7posy,strC);
+            relay.turn_on_channel(3);
+            relay.turn_off_channel(4);
+            }
+          if (polar=="VERT") {
+            if (Str70cm=="VERT") return;
+            deactivate_button(H7posx,H7posy,strH);
+            activate_button(V7posx,V7posy,strV);
+            deactivate_button(C7posx,C7posy,strC);
+            relay.turn_off_channel(3);
+            relay.turn_off_channel(4);
+            }
+          if (polar=="CIRC") {
+            if (Str70cm=="CIRC") return;
+            deactivate_button(H7posx,H7posy,strH);
+            deactivate_button(V7posx,V7posy,strV);
+            activate_button(C7posx,C7posy,strC);
+            relay.turn_off_channel(3);
+            relay.turn_on_channel(4);
+          }
+          Str70cm=polar;
+        }
+        DingDong();
+          
+      } else {
+        String s = "{\"v2m\":\""+Str2m+"\",\"v70cm\":\""+Str70cm+"\"}";
+        webServer.send(200, "application/json", s);
+      }
+    });
     webServer.on("/", []() {
-      String s = "<h1>Remote Polarization Switch</h1><table width='600' style='text-align:center;'><tr><td>2m</td><td>70cm</td></tr><tr><td>HORI</td><td>HORI</td></tr><tr><td>VERT</td><td>VERT</td></tr><tr><td>CIRC</td><td>CIRC</td></tr></table><p><a href=\"/reset\">Reset Wi-Fi Settings</a></p>";
-      webServer.send(200, "text/html", makePage("Remote Polarization Switch", s));
+     /* String s = "<h1>Remote Polarization Switch</h1><div id=\"one\"></div><table width='600' style='text-align:center;'><tr><td>2m</td><td>70cm</td></tr><tr><td>HORI</td><td>HORI</td></tr><tr><td>VERT</td><td>VERT</td></tr><tr><td>CIRC</td><td>CIRC</td></tr></table><p><a href=\"/reset\">Reset Wi-Fi Settings</a></p>";
+      s+="<script type=\"text/javascript\">\n";
+      s+=" setInterval(function(){\n\
+        $.getJSON('/json', function(data) {\n\
+            $('#one').empty();\n\
+            console.debug(data);\n\
+            for(var i in data) {\n\
+                $('#one').append(data[i]);\n\
+            }\n\
+        });\n\
+    }, 5000);\n\
+</script><div id=\"one\"></div>\n";
+    */
+    
+webServer.send(200, "text/html", indexHtml);
     });
     webServer.on("/reset", []() {
       // reset the wifi config
@@ -383,11 +478,12 @@ void setupMode() {
 String makePage(String title, String contents) {
   String s = "<!DOCTYPE html><html><head>";
   s += "<meta name=\"viewport\" content=\"width=device-width,user-scalable=0\">";
-  s += "<title>";
+  s += "<script src=\"https://code.jquery.com/jquery-3.6.0.slim.min.js\" integrity=\"sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=\" crossorigin=\"anonymous\"></script>";
+  s += "\n<title>";
   s += title;
-  s += "</title></head><body>";
+  s += "</title></head><body>\n";
   s += contents;
-  s += "</body></html>";
+  s += "\n</body></html>";
   return s;
 }
 
